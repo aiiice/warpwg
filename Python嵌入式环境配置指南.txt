@@ -1,0 +1,470 @@
+===============================================
+  Python 嵌入式环境配置指南
+===============================================
+
+本项目采用完全独立部署方案，不依赖用户系统的 Python 环境
+所有功能（证书生成、网关启动等）都使用项目内嵌的 Python
+
+===============================================
+  为什么需要嵌入式 Python？
+===============================================
+
+✅ 优点：
+- 完全独立，不依赖用户系统环境
+- 避免 Python 版本冲突
+- 避免 PATH 环境变量问题
+- 用户无需安装 Python
+- 部署更简单，开箱即用
+
+❌ 不使用系统 Python 的原因：
+- 用户可能没有安装 Python
+- 不同用户的 Python 版本不同
+- PATH 配置问题导致找不到 Python
+- 依赖库版本冲突
+
+===============================================
+  目录结构
+===============================================
+
+项目根目录/
+├── electron-app/          # Electron 应用
+├── backend/               # Python 后端脚本
+└── resources/             # 资源文件
+    └── python-embed/      # ⭐ Python 嵌入式环境（重要）
+        ├── python.exe     # Python 解释器
+        ├── python313.dll  # Python DLL
+        ├── python3.dll
+        ├── pythonw.exe
+        ├── Lib/           # 标准库
+        │   └── site-packages/  # 第三方库
+        │       └── mitmproxy/  # mitmproxy 库
+        ├── Scripts/       # 可执行脚本
+        │   ├── mitmdump.exe   # ⭐ mitmdump（重要）
+        │   ├── pip.exe
+        │   └── ...
+        ├── DLLs/          # 依赖 DLL
+        └── python313._pth # 路径配置（重要）
+
+===============================================
+  配置步骤
+===============================================
+
+方法1：从系统 Python 复制（推荐）⭐⭐⭐
+----------------------------------------
+
+如果你的电脑已安装 Python 和 mitmproxy：
+
+第1步：找到 Python 安装目录
+   where python
+
+   例如: C:\Python313\
+
+第2步：复制整个 Python 目录
+   复制 C:\Python313\ 的所有文件
+   粘贴到项目的 resources/python-embed/
+
+第3步：验证文件结构
+   确保存在以下文件:
+   ✓ resources/python-embed/python.exe
+   ✓ resources/python-embed/Scripts/mitmdump.exe
+   ✓ resources/python-embed/Scripts/pip.exe
+
+第4步：测试
+   打开命令提示符，进入项目目录:
+   cd E:\BaiduNetdiskDownload\v7.0
+   resources\python-embed\python.exe --version
+   resources\python-embed\Scripts\mitmdump.exe --version
+
+
+方法2：下载 Python 嵌入式版本并安装依赖
+----------------------------------------
+
+如果你的电脑没有 Python：
+
+第1步：下载 Python 嵌入式版本
+   访问: https://www.python.org/downloads/windows/
+
+   找到 "Windows embeddable package (64-bit)"
+   例如: python-3.13.0-embed-amd64.zip
+
+   下载并解压到 resources/python-embed/
+
+第2步：配置 pip
+   嵌入式版本默认没有 pip，需要手动安装
+
+   1) 下载 get-pip.py:
+      https://bootstrap.pypa.io/get-pip.py
+
+   2) 修改 python313._pth 文件
+      打开 resources/python-embed/python313._pth
+      取消注释这一行（删除前面的 #）:
+      import site
+
+   3) 安装 pip:
+      cd resources\python-embed
+      python.exe get-pip.py
+
+第3步：安装 mitmproxy
+   resources\python-embed\Scripts\pip.exe install mitmproxy
+
+第4步：验证安装
+   resources\python-embed\Scripts\mitmdump.exe --version
+
+
+方法3：使用标准 Python 安装创建独立环境
+----------------------------------------
+
+使用虚拟环境工具创建独立的 Python 环境：
+
+第1步：安装 Python（如果没有）
+   https://www.python.org/downloads/
+
+第2步：创建虚拟环境
+   cd E:\BaiduNetdiskDownload\v7.0\resources
+   python -m venv python-embed
+
+第3步：激活虚拟环境并安装依赖
+   cd python-embed\Scripts
+   activate
+   pip install mitmproxy
+
+第4步：验证
+   mitmdump --version
+
+===============================================
+  快速验证脚本
+===============================================
+
+在项目根目录创建 check-python.bat 文件:
+
+@echo off
+echo ===============================================
+echo   检查 Python 嵌入式环境
+echo ===============================================
+echo.
+
+echo [1/4] 检查 Python 解释器...
+if exist "resources\python-embed\python.exe" (
+    echo ✓ python.exe 存在
+    resources\python-embed\python.exe --version
+) else (
+    echo ✗ python.exe 不存在
+    goto :error
+)
+
+echo.
+echo [2/4] 检查 pip...
+if exist "resources\python-embed\Scripts\pip.exe" (
+    echo ✓ pip.exe 存在
+    resources\python-embed\Scripts\pip.exe --version
+) else (
+    echo ✗ pip.exe 不存在（不影响运行，但无法安装新包）
+)
+
+echo.
+echo [3/4] 检查 mitmdump...
+if exist "resources\python-embed\Scripts\mitmdump.exe" (
+    echo ✓ mitmdump.exe 存在
+    resources\python-embed\Scripts\mitmdump.exe --version
+) else (
+    echo ✗ mitmdump.exe 不存在
+    goto :error
+)
+
+echo.
+echo [4/4] 检查后端脚本...
+if exist "backend\gateway\warp_gateway_pro.py" (
+    echo ✓ warp_gateway_pro.py 存在
+) else (
+    echo ✗ warp_gateway_pro.py 不存在
+    goto :error
+)
+
+echo.
+echo ===============================================
+echo   ✓ 环境检查通过，可以正常使用！
+echo ===============================================
+pause
+exit /b 0
+
+:error
+echo.
+echo ===============================================
+echo   ✗ 环境检查失败，请按照配置指南配置环境
+echo ===============================================
+pause
+exit /b 1
+
+===============================================
+  安装 mitmproxy 依赖（如果缺失）
+===============================================
+
+如果 mitmdump.exe 不存在：
+
+方法A：使用项目内 pip 安装
+   resources\python-embed\Scripts\pip.exe install mitmproxy
+
+方法B：使用系统 pip 安装到项目 Python
+   pip install --target=resources\python-embed\Lib\site-packages mitmproxy
+
+方法C：复制系统已有的 mitmproxy
+   从系统 Python 的 Scripts 目录复制：
+   C:\Python313\Scripts\mitmdump.exe
+   → resources\python-embed\Scripts\mitmdump.exe
+
+   还需要复制依赖库：
+   C:\Python313\Lib\site-packages\mitmproxy\
+   → resources\python-embed\Lib\site-packages\mitmproxy\
+
+===============================================
+  打包部署
+===============================================
+
+打包时需要将整个 python-embed 目录打包进去：
+
+electron-builder 配置（package.json）:
+
+{
+  "build": {
+    "extraResources": [
+      {
+        "from": "resources",
+        "to": "resources",
+        "filter": ["**/*"]
+      }
+    ]
+  }
+}
+
+打包后的目录结构:
+
+安装目录/
+└── resources/
+    ├── app.asar           # Electron 应用
+    ├── backend/           # Python 后端
+    └── resources/
+        └── python-embed/  # Python 环境
+
+===============================================
+  常见问题
+===============================================
+
+问题1: python.exe 存在但 mitmdump.exe 不存在
+----------------------------------------
+原因: 没有安装 mitmproxy
+
+解决:
+resources\python-embed\Scripts\pip.exe install mitmproxy
+
+
+问题2: 运行 mitmdump 报错：找不到模块
+----------------------------------------
+原因: Python 库路径配置问题
+
+解决: 检查 python313._pth 文件
+确保包含:
+python313.zip
+.
+Lib
+Lib/site-packages
+import site
+
+
+问题3: pip 不存在
+----------------------------------------
+原因: 嵌入式版本默认不带 pip
+
+解决:
+1. 下载 get-pip.py
+2. python.exe get-pip.py
+
+
+问题4: 启动时提示找不到 DLL
+----------------------------------------
+原因: 缺少依赖 DLL
+
+解决:
+确保复制了所有 DLL 文件:
+- python313.dll
+- python3.dll
+- vcruntime140.dll
+- 以及 DLLs/ 目录下的所有文件
+
+
+问题5: 嵌入式 Python 太大
+----------------------------------------
+如果只需要运行 mitmdump，可以精简：
+
+保留必要文件:
+✓ python.exe
+✓ python313.dll
+✓ python3.dll
+✓ Lib/
+✓ Scripts/mitmdump.exe
+✓ DLLs/
+
+可删除:
+✗ Doc/
+✗ tcl/
+✗ idle.exe
+✗ 不需要的第三方库
+
+===============================================
+  精简版配置（仅 mitmdump）
+===============================================
+
+如果想要最小化包体积：
+
+第1步：下载 Python 嵌入式版本
+   python-3.13.0-embed-amd64.zip
+   解压到 resources/python-embed/
+
+第2步：配置 pip
+   修改 python313._pth，取消注释 import site
+   下载并运行: python.exe get-pip.py
+
+第3步：只安装 mitmproxy
+   Scripts\pip.exe install mitmproxy
+
+第4步：清理不需要的包（可选）
+   只保留 mitmproxy 及其依赖
+   删除其他不需要的包
+
+最终大小约: 100-200 MB
+
+===============================================
+  开发模式 vs 生产模式
+===============================================
+
+开发模式（npm start）:
+- 可以使用系统 Python（如果配置了）
+- 也可以使用嵌入式 Python
+- 便于调试和开发
+
+生产模式（打包后的 exe）:
+- 必须使用嵌入式 Python
+- 用户无需安装 Python
+- 完全独立运行
+
+当前项目配置:
+- 只使用嵌入式 Python
+- 开发和生产环境统一
+- 避免环境差异问题
+
+===============================================
+  测试清单
+===============================================
+
+配置完成后，测试以下功能:
+
+✓ 1. Python 版本检查
+     resources\python-embed\python.exe --version
+
+✓ 2. mitmdump 版本检查
+     resources\python-embed\Scripts\mitmdump.exe --version
+
+✓ 3. 证书生成测试
+     在应用中点击"生成证书"按钮
+
+✓ 4. 证书安装测试
+     在应用中点击"安装证书到系统"按钮
+
+✓ 5. 网关启动测试
+     在应用中点击"启动"按钮
+
+✓ 6. 网关功能测试
+     测试 HTTPS 拦截是否正常
+
+===============================================
+  自动化配置脚本（Windows）
+===============================================
+
+创建 setup-python-env.bat:
+
+@echo off
+echo ===============================================
+echo   自动配置 Python 嵌入式环境
+echo ===============================================
+echo.
+
+set PYTHON_DIR=resources\python-embed
+
+echo [1/5] 检查系统 Python...
+where python >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ✗ 系统未安装 Python，请先安装 Python
+    goto :error
+)
+
+echo ✓ 找到系统 Python
+for /f "tokens=*" %%i in ('where python') do set SYSTEM_PYTHON=%%i
+echo   路径: %SYSTEM_PYTHON%
+
+echo.
+echo [2/5] 创建目录...
+if not exist %PYTHON_DIR% mkdir %PYTHON_DIR%
+
+echo.
+echo [3/5] 复制 Python 文件...
+for %%i in ("%SYSTEM_PYTHON%") do set PYTHON_ROOT=%%~dpi
+echo   从: %PYTHON_ROOT%
+echo   到: %PYTHON_DIR%\
+
+xcopy "%PYTHON_ROOT%*" "%PYTHON_DIR%\" /E /I /Y /Q
+
+echo.
+echo [4/5] 检查 mitmproxy...
+if exist "%PYTHON_DIR%\Scripts\mitmdump.exe" (
+    echo ✓ mitmdump.exe 已存在
+) else (
+    echo ! mitmdump.exe 不存在，正在安装...
+    "%PYTHON_DIR%\Scripts\pip.exe" install mitmproxy
+)
+
+echo.
+echo [5/5] 验证环境...
+"%PYTHON_DIR%\python.exe" --version
+"%PYTHON_DIR%\Scripts\mitmdump.exe" --version
+
+echo.
+echo ===============================================
+echo   ✓ 配置完成！
+echo ===============================================
+pause
+exit /b 0
+
+:error
+echo.
+echo ===============================================
+echo   ✗ 配置失败
+echo ===============================================
+pause
+exit /b 1
+
+===============================================
+  需要帮助？
+===============================================
+
+如果配置过程中遇到问题，请提供:
+
+1. 操作系统版本
+   winver
+
+2. Python 版本（如果有）
+   python --version
+
+3. 项目目录结构
+   tree resources\python-embed /F
+
+4. 错误信息截图
+
+5. 执行 check-python.bat 的输出
+
+===============================================
+
+最后更新: 2024-12-06
+适用版本: v2.0.7+
+部署方式: 嵌入式 Python
+
+===============================================
+

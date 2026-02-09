@@ -1,0 +1,337 @@
+===============================================
+  启动网关失败：Python not found
+===============================================
+
+问题: 证书已安装，但启动网关时提示 "Python not found at: python"
+
+原因: 应用找不到 Python 解释器
+
+===============================================
+  快速解决方案
+===============================================
+
+方法1：验证 Python 是否在系统 PATH 中（最常见）⭐⭐⭐
+----------------------------------------
+
+1. 打开命令提示符（Win+R → cmd）
+
+2. 输入命令:
+   python --version
+
+3. 查看结果:
+
+   ✅ 显示 "Python 3.x.x"
+   → Python 已安装，但应用找不到
+   → 跳到【方法2】检查 Python 路径
+
+   ❌ 提示 "'python' 不是内部或外部命令"
+   → Python 未添加到 PATH
+   → 跳到【方法3】添加到 PATH
+
+
+方法2：检查 Python 安装路径
+----------------------------------------
+
+1. 查找 Python 可执行文件位置:
+   where python
+
+   常见路径:
+   C:\Python313\python.exe
+   C:\Users\你的用户名\AppData\Local\Programs\Python\Python313\python.exe
+
+2. 如果找到了路径，说明 Python 已安装
+
+3. 确保这个路径在系统 PATH 中（见【方法3】）
+
+
+方法3：将 Python 添加到系统 PATH（推荐）⭐⭐⭐
+----------------------------------------
+
+第一步：找到 Python 安装路径
+   常见位置:
+   - C:\Python313\
+   - C:\Users\你的用户名\AppData\Local\Programs\Python\Python313\
+
+第二步：添加到 PATH
+   1. 右键"此电脑" → 属性
+   2. 高级系统设置
+   3. 环境变量
+   4. 在"系统变量"区域找到 "Path"，点击"编辑"
+   5. 点击"新建"
+   6. 添加两个路径:
+      C:\Python313\
+      C:\Python313\Scripts\
+      （替换为你的实际 Python 路径）
+   7. 点击"确定"保存
+
+第三步：验证
+   1. 关闭所有命令提示符窗口
+   2. 重新打开 cmd
+   3. 输入: python --version
+   4. 应该显示版本号
+
+第四步：重启应用
+   1. 关闭应用（Ctrl+C 如果是 npm start）
+   2. 重新启动应用
+   3. 尝试启动网关
+
+
+方法4：重新安装 Python（最彻底）⭐⭐
+----------------------------------------
+
+如果以上方法都不行，重新安装 Python:
+
+1. 卸载现有 Python（可选）
+   控制面板 → 程序和功能 → 卸载 Python
+
+2. 下载 Python
+   https://www.python.org/downloads/
+
+3. 运行安装程序
+
+   ⚠️ 重要：必须勾选
+   ☑ Add Python to PATH
+
+   然后点击 "Install Now"
+
+4. 安装完成后，重启电脑（重要！）
+
+5. 验证安装:
+   python --version
+   pip --version
+   mitmdump --version
+
+6. 重新启动应用
+
+
+方法5：使用嵌入式 Python（高级用户）
+----------------------------------------
+
+如果不想修改系统环境:
+
+1. 准备 Python 嵌入式版本
+   - 下载 Python 嵌入式包
+   - 或复制现有 Python 安装
+
+2. 放置到项目目录
+   E:\BaiduNetdiskDownload\v7.0\resources\python-embed\python.exe
+
+3. 确保目录结构:
+   resources/
+   └── python-embed/
+       ├── python.exe
+       ├── python313.dll
+       ├── Lib/
+       └── Scripts/
+           └── mitmdump.exe
+
+4. 重启应用，它会自动使用嵌入式 Python
+
+===============================================
+  验证 Python 是否可用
+===============================================
+
+在命令提示符中依次运行:
+
+✅ python --version
+   → 应该显示: Python 3.x.x
+
+✅ python -c "print('Hello')"
+   → 应该显示: Hello
+
+✅ pip --version
+   → 应该显示: pip x.x.x from ...
+
+✅ mitmdump --version
+   → 应该显示: Mitmproxy: x.x.x
+
+如果以上命令都能正常运行，说明 Python 环境正常
+
+===============================================
+  应用的 Python 查找顺序
+===============================================
+
+应用会按以下顺序查找 Python:
+
+1️⃣ 嵌入式 Python（推荐用于打包版本）
+   resources/python-embed/python.exe
+
+2️⃣ 系统安装的 Python（标准路径）
+   C:\Python313\python.exe
+   C:\Python312\python.exe
+   C:\Python311\python.exe
+   ...
+
+3️⃣ 用户目录安装的 Python
+   %APPDATA%\Python\Python313\python.exe
+   %LOCALAPPDATA%\Programs\Python\Python313\python.exe
+
+4️⃣ PATH 环境变量中的 python 命令
+
+如果以上都找不到，就会报错 "Python not found"
+
+===============================================
+  检查应用找到的 Python 路径
+===============================================
+
+如果想知道应用使用的是哪个 Python:
+
+1. 启动应用（npm start 或双击打开）
+
+2. 按 F12 打开开发者工具
+
+3. 点击 "Console" 标签
+
+4. 查找类似这样的日志:
+   [Python] Using: C:\Python313\python.exe
+   [Python] Using embedded Python: ...
+   或
+   [Python] Trying to use python from PATH
+
+5. 这会告诉你应用找到的 Python 路径
+
+===============================================
+  常见错误及解决
+===============================================
+
+错误1: "Python not found at: python"
+----------------------------------------
+原因: Python 未添加到 PATH
+
+解决:
+- 使用【方法3】添加到 PATH
+- 或使用【方法4】重新安装 Python
+- 确保安装时勾选 "Add Python to PATH"
+
+
+错误2: "Python not found in system PATH"
+----------------------------------------
+原因: 系统找不到 python 命令
+
+解决:
+1. 验证 Python 是否安装: python --version
+2. 如果未安装，使用【方法4】安装
+3. 如果已安装但命令不可用，使用【方法3】添加到 PATH
+
+
+错误3: Python 版本太旧
+----------------------------------------
+如果 Python 版本低于 3.9:
+
+1. 卸载旧版本
+2. 安装 Python 3.11 或更高版本
+3. 重新安装 mitmproxy: pip install mitmproxy
+
+
+错误4: 找到了错误的 Python
+----------------------------------------
+如果系统安装了多个 Python 版本:
+
+1. 确认正确的 Python 路径
+2. 将正确的路径放在 PATH 的最前面
+3. 或删除/移动其他 Python 版本
+
+===============================================
+  完整诊断流程
+===============================================
+
+步骤1: 检查 Python 命令
+   python --version
+
+步骤2: 如果命令不存在
+   → 检查是否安装了 Python
+   → 如果已安装，添加到 PATH
+   → 如果未安装，安装 Python
+
+步骤3: 检查 pip
+   pip --version
+
+步骤4: 检查 mitmproxy
+   mitmdump --version
+
+   如果不存在:
+   pip install mitmproxy
+
+步骤5: 验证系统环境
+   python -c "import sys; print(sys.executable)"
+
+   这会显示 Python 可执行文件的完整路径
+
+步骤6: 重启应用
+   关闭所有相关进程
+   重新启动应用
+
+步骤7: 启动网关
+   在应用中点击"启动"按钮
+
+===============================================
+  测试命令（一键检查）
+===============================================
+
+在 PowerShell 中运行以下命令，检查环境是否正常:
+
+# 检查 Python
+python --version
+
+# 检查 pip
+pip --version
+
+# 检查 mitmdump
+mitmdump --version
+
+# 检查 Python 路径
+python -c "import sys; print(f'Python executable: {sys.executable}')"
+
+# 检查环境变量
+$env:Path -split ';' | Select-String -Pattern 'Python'
+
+# 检查证书
+Test-Path $env:USERPROFILE\.mitmproxy\mitmproxy-ca-cert.cer
+
+# 如果所有命令都正常运行，环境配置正确
+
+===============================================
+  升级到 v2.0.6+
+===============================================
+
+v2.0.6 版本改进:
+✅ 更智能的 Python 查找逻辑
+✅ 更清晰的错误提示
+✅ 支持多种 Python 安装路径
+✅ 自动验证 PATH 中的 python 命令
+
+如果使用旧版本，建议升级！
+
+===============================================
+  需要帮助？
+===============================================
+
+如果问题仍未解决，请提供以下信息:
+
+1. Python 版本
+   python --version
+
+2. Python 安装路径
+   where python
+
+3. PATH 环境变量
+   echo %PATH%
+
+4. 应用日志（F12 → Console）
+   查找 [Python] 开头的日志
+
+5. 应用版本
+   查看窗口标题
+
+6. 启动方式
+   - npm start（开发模式）
+   - 打包的 exe 文件
+
+===============================================
+
+最后更新: 2024-12-06
+适用版本: v2.0.7+
+问题类型: Python 找不到
+
+===============================================
+
